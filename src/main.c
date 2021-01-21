@@ -151,90 +151,22 @@ int debug = 0;
 int main(int argc, char **argv)
 {
     int i;
-    int phonetic = 0;
+    char* input = (char*) malloc(256*sizeof(char));
 
-    char* wavfilename = NULL;
-    char input[256];
+    //for(i=0; i<256; i++) *(input+i) = 0;
 
-    for(i=0; i<256; i++) input[i] = 0;
-
-    if (argc <= 1)
-    {
-        PrintUsage();
-        return 1;
-    }
-
+    FILE* instream = fopen("/dev/stdin","r");
+    fgets(input,256,instream);
     i = 1;
-    while(i < argc)
-    {
-        if (argv[i][0] != '-')
-        {
-            strncat(input, argv[i], 255);
-            strncat(input, " ", 255);
-        } else
-        {
-            if (strcmp(&argv[i][1], "wav")==0)
-            {
-                wavfilename = argv[i+1];
-                i++;
-            } else
-            if (strcmp(&argv[i][1], "sing")==0)
-            {
-                EnableSingmode();
-            } else
-            if (strcmp(&argv[i][1], "phonetic")==0)
-            {
-                phonetic = 1;
-            } else
-            if (strcmp(&argv[i][1], "debug")==0)
-            {
-                debug = 1;
-            } else
-            if (strcmp(&argv[i][1], "pitch")==0)
-            {
-                SetPitch(atoi(argv[i+1]));
-                i++;
-            } else
-            if (strcmp(&argv[i][1], "speed")==0)
-            {
-                SetSpeed(atoi(argv[i+1]));
-                i++;
-            } else
-            if (strcmp(&argv[i][1], "mouth")==0)
-            {
-                SetMouth(atoi(argv[i+1]));
-                i++;
-            } else
-            if (strcmp(&argv[i][1], "throat")==0)
-            {
-                SetThroat(atoi(argv[i+1]));
-                i++;
-            } else
-            {
-                PrintUsage();
-                return 1;
-            }
-        }
+    //strncat(input, "HELLO MY NAME IS SAM", 255);
+    strncat(input, " ", 255);
 
-        i++;
-    } //while
-
-    for(i=0; input[i] != 0; i++)
-        input[i] = toupper((int)input[i]);
-
-    if (debug)
-    {
-        if (phonetic) printf("phonetic input: %s\n", input);
-        else printf("text input: %s\n", input);
+    for(i=0; *(input+i)!=0; i++) {
+        *(input+i) = toupper((int)*(input+i));
     }
 
-    if (!phonetic)
-    {
-        strncat(input, "[", 256);
-        if (!TextToPhonemes((unsigned char *)input)) return 1;
-        if (debug)
-            printf("phonetic input: %s\n", input);
-    } else strncat(input, "\x9b", 256);
+    strncat(input, "[", 256);
+    if(!TextToPhonemes((unsigned char*) input)) return 1;
 
 #ifdef USESDL
     if ( SDL_Init(SDL_INIT_AUDIO) < 0 )
@@ -252,10 +184,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (wavfilename != NULL)
-        WriteWav(wavfilename, GetBuffer(), GetBufferLength()/50);
-    else
-        OutputSound();
+    OutputSound();
 
 
     return 0;
